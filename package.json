@@ -1,7 +1,7 @@
 {
   "name": "victor-ai-backend",
   "version": "1.0.0",
-  "description": "Victor AI Multi-Agent Orchestration Backend",
+  "description": "Victor AI Backend Cluster Configuration",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "node-fetch": "^3.3.2",
     "uuid": "^9.0.1"
   }
 }
