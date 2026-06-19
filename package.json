@@ -1,7 +1,7 @@
 {
   "name": "victor-ai-backend",
   "version": "1.0.0",
-  "description": "Victor AI Backend",
+  "description": "Victor AI Multi-Agent Orchestration Backend",
   "main": "server.js",
   "type": "module",
   "scripts": {
