@@ -1,7 +1,7 @@
 {
   "name": "victor-ai-backend",
   "version": "1.0.0",
-  "description": "Victor AI Backend Cluster Configuration",
+  "description": "Victor AI Multi-Agent Production Backend Configuration Cluster",
   "main": "server.js",
   "type": "module",
   "scripts": {
