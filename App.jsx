@@ -8,7 +8,6 @@ const VictorAI = () => {
   const [activeTab, setActiveTab] = useState('submit');
   const [deliveryFormat, setDeliveryFormat] = useState('text');
   
-  // State for Auth and Project IDs required by the backend
   const [token, setToken] = useState('');
   const [projectId, setProjectId] = useState('');
   const [credits, setCredits] = useState(0);
@@ -19,10 +18,8 @@ const VictorAI = () => {
     setupSession();
   }, []);
 
-  // Backend requires full JWT Authentication and a valid Project
   const setupSession = async () => {
     try {
-      // 1. Register/Login a temporary user to get a valid JWT
       const authRes = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -38,7 +35,6 @@ const VictorAI = () => {
         setToken(authData.token);
         setCredits(authData.credits);
 
-        // 2. Create a default project for this authenticated session
         const projectRes = await fetch(`${API_URL}/projects`, {
           method: 'POST',
           headers: {
@@ -47,17 +43,16 @@ const VictorAI = () => {
           },
           body: JSON.stringify({
             name: 'Default Project',
-            description: 'Automated workspace for UI submissions'
+            description: 'Automated workspace'
           })
         });
         const projectData = await projectRes.json();
         if (projectData.success) {
-          setProjectId(projectData.project.id);
-          console.log('✅ Auth and Project initialized successfully!');
+          setProjectId(projectData.projectId);
         }
       }
     } catch (error) {
-      console.error('❌ Failed to initialize authenticated session:', error);
+      console.error('❌ Failed to initialize session:', error);
     }
   };
 
@@ -70,14 +65,12 @@ const VictorAI = () => {
 
     setLoading(true);
     try {
-      // Corrected API endpoint: /api/tasks
       const res = await fetch(`${API_URL}/tasks`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Passing the required JWT
+          'Authorization': `Bearer ${token}`
         },
-        // Match payload properties to backend expectations
         body: JSON.stringify({
           projectId: projectId,
           prompt: currentTask,
@@ -88,12 +81,9 @@ const VictorAI = () => {
       const data = await res.json();
       
       if (data.success) {
-        // The backend processes asynchronously and returns a 'processing' status
         setTasks([data, ...tasks]);
         setCurrentTask('');
-        alert('🚀 Task submitted and processing in background!');
-        
-        // Refresh usage details to update credits display
+        alert('🚀 Task submitted!');
         fetchUsage();
       } else {
         alert(`❌ Error: ${data.error}`);
@@ -126,19 +116,10 @@ const VictorAI = () => {
       </header>
 
       <nav className="victor-nav">
-        <button 
-          className={`nav-btn ${activeTab === 'submit' ? 'active' : ''}`}
-          onClick={() => setActiveTab('submit')}
-        >
+        <button className={`nav-btn ${activeTab === 'submit' ? 'active' : ''}`} onClick={() => setActiveTab('submit')}>
           📝 Submit Task
         </button>
-        <button 
-          className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-          onClick={() => {
-            setActiveTab('dashboard');
-            fetchUsage();
-          }}
-        >
+        <button className={`nav-btn ${activeTab === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveTab('dashboard'); fetchUsage(); }}>
           📊 Dashboard
         </button>
       </nav>
@@ -151,7 +132,7 @@ const VictorAI = () => {
               <textarea
                 value={currentTask}
                 onChange={(e) => setCurrentTask(e.target.value)}
-                placeholder="Describe your task (e.g., 'generate a summary of web3 trends')..."
+                placeholder="Describe your task..."
                 rows={6}
                 disabled={loading || !projectId}
               />
@@ -166,11 +147,7 @@ const VictorAI = () => {
                 </select>
               </div>
 
-              <button 
-                type="submit" 
-                disabled={loading || !currentTask.trim() || !projectId}
-                className="submit-btn"
-              >
+              <button type="submit" disabled={loading || !currentTask.trim() || !projectId} className="submit-btn">
                 {!projectId ? '⏳ Initializing Session...' : loading ? '⏳ Processing...' : '🚀 Submit Task'}
               </button>
             </form>
