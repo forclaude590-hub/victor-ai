@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import fetch from 'node-fetch';
 
 dotenv.config();
 
@@ -35,8 +36,7 @@ app.get('/', (req, res) => {
       health: '/api/health',
       register: '/api/auth/register',
       login: '/api/auth/login',
-      tasks: '/api/tasks',
-      usage: '/api/user/usage'
+      tasks: '/api/tasks'
     },
     timestamp: new Date().toISOString()
   });
@@ -74,9 +74,7 @@ class RouterAgent {
 
 class ProcessorAgent {
   async process(input) {
-    const prompt = (input.prompt || '').toLowerCase();
     let baseResult = '';
-    
     if (input.targetAgent === 'ANALYZER') {
       baseResult = `[Analysis Report]\n- Detected input pattern complexity: Medium\n- Baseline validation checks: PASSED\n- Optimization score: 88%\n- Core assessment: Target telemetry clusters align with production standards.`;
     } else if (input.targetAgent === 'SUMMARIZER') {
@@ -84,32 +82,14 @@ class ProcessorAgent {
     } else {
       baseResult = `[Generated Layout]\n- Content: Production-ready modular data layout infrastructure constructed matching prompt variables.\n- Active Nodes: Core Engine, Node Pipeline Gateway.`;
     }
-    
-    return {
-      agent: 'ProcessorAgent',
-      result: baseResult,
-      confidence: 0.95
-    };
+    return { agent: 'ProcessorAgent', result: baseResult, confidence: 0.95 };
   }
 }
 
 class ValidatorAgent {
   async process(input) {
     const isValid = input.result && input.result.length > 10;
-    return {
-      agent: 'ValidatorAgent',
-      isValid: isValid,
-      score: isValid ? 96 : 30
-    };
-  }
-}
-
-class OptimizerAgent {
-  async process(input) {
-    return {
-      agent: 'OptimizerAgent',
-      result: `${input.result}\n\n[Optimized: Micro-structures enhanced. Caching headers and sandboxed production wrappers injected successfully.]`
-    };
+    return { agent: 'ValidatorAgent', isValid: isValid, score: isValid ? 96 : 30 };
   }
 }
 
@@ -125,13 +105,7 @@ class ExecutorAgent {
     } else if (format === 'html') {
       wrapped = `<div style="padding:15px; background:#1a1f26; border-left:4px solid #00d084; color:#fff; border-radius:6px;"><h4 style="color:#00d084; margin:0 0 8px 0;">Cluster Response</h4><p style="white-space:pre-wrap; margin:0;">${input.result}</p></div>`;
     }
-    
-    return {
-      agent: 'ExecutorAgent',
-      result: wrapped,
-      format,
-      status: 'SUCCESS'
-    };
+    return { agent: 'ExecutorAgent', result: wrapped, format, status: 'SUCCESS' };
   }
 }
 
@@ -146,15 +120,8 @@ class WorkflowEngine {
     try {
       const router = await new RouterAgent().process(this.input);
       const processor = await new ProcessorAgent().process({ ...this.input, ...router });
-      let validator = await new ValidatorAgent().process(processor);
-      let finalOutput = processor.result;
-      
-      if (!validator.isValid) {
-        const optimizer = await new OptimizerAgent().process(processor);
-        finalOutput = optimizer.result;
-      }
-      
-      const executor = await new ExecutorAgent().process({ result: finalOutput, format: this.input.format });
+      await new ValidatorAgent().process(processor);
+      const executor = await new ExecutorAgent().process({ result: processor.result, format: this.input.format });
       return { success: true, result: executor.result };
     } catch (err) {
       return { success: false, error: err.message };
@@ -182,8 +149,6 @@ app.post('/api/tasks', authenticate, async (req, res) => {
   if (!prompt) return res.status(400).json({ error: 'Prompt content is empty' });
   
   const taskId = uuidv4();
-  
-  // Execute synchronous simulation chain for instant responsive feedback in UI
   const engine = new WorkflowEngine(taskId, { prompt, format });
   const run = await engine.execute();
   
